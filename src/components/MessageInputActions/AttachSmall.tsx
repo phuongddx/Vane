@@ -8,7 +8,7 @@ import { File, LoaderCircle, Paperclip, Plus, Trash } from 'lucide-react';
 import { Fragment, useRef, useState } from 'react';
 import { useChat } from '@/lib/hooks/useChat';
 import { AnimatePresence } from 'motion/react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { toast } from 'sonner';
 
 const AttachSmall = () => {
