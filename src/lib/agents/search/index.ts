@@ -52,12 +52,34 @@ class SearchAgent {
         .execute();
     }
 
-    const classification = await classify({
-      chatHistory: input.chatHistory,
-      enabledSources: input.config.sources,
-      query: input.followUp,
-      llm: input.config.llm,
-    });
+    let classification: Awaited<ReturnType<typeof classify>>;
+
+    try {
+      classification = await classify({
+        chatHistory: input.chatHistory,
+        enabledSources: input.config.sources,
+        query: input.followUp,
+        llm: input.config.llm,
+      });
+    } catch (err) {
+      console.error(
+        'Classifier failed, falling back to a plain search:',
+        err,
+      );
+
+      classification = {
+        classification: {
+          skipSearch: false,
+          personalSearch: false,
+          academicSearch: false,
+          discussionSearch: false,
+          showWeatherWidget: false,
+          showStockWidget: false,
+          showCalculationWidget: false,
+        },
+        standaloneFollowUp: input.followUp,
+      };
+    }
 
     const widgetPromise = WidgetExecutor.executeAll({
       classification,
