@@ -99,7 +99,13 @@ class ModelRegistry {
     const provider = providers[type];
     if (!provider) throw new Error('Invalid provider type');
 
-    const newProvider = configManager.addModelProvider(type, name, config);
+    const parsedConfig = provider.parseAndValidate(config);
+
+    const newProvider = configManager.addModelProvider(
+      type,
+      name,
+      parsedConfig,
+    );
 
     const instance = createProviderInstance(
       provider,
@@ -154,16 +160,27 @@ class ModelRegistry {
     name: string,
     config: any,
   ): Promise<ConfigModelProvider> {
+    const existing = configManager
+      .getCurrentConfig()
+      .modelProviders.find((p) => p.id === providerId);
+
+    if (!existing) throw new Error('Provider not found');
+
+    const provider = providers[existing.type];
+    if (!provider) throw new Error('Invalid provider type');
+
+    const parsedConfig = provider.parseAndValidate(config);
+
     const updated = await configManager.updateModelProvider(
       providerId,
       name,
-      config,
+      parsedConfig,
     );
     const instance = createProviderInstance(
-      providers[updated.type],
+      provider,
       providerId,
       name,
-      config,
+      parsedConfig,
     );
 
     let m: ModelList = { chat: [], embedding: [] };
