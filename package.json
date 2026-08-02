@@ -76,5 +76,10 @@
   },
   "optionalDependencies": {
     "@napi-rs/canvas": "^0.1.87"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3"
+    ]
   }
 }
