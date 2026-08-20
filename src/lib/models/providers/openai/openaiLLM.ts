@@ -195,7 +195,7 @@ class OpenAILLM extends BaseLLM<OpenAIConfig> {
   }
 
   async generateObject<T>(input: GenerateObjectInput): Promise<T> {
-    const response = await this.openAIClient.chat.completions.create({
+    const createParams = {
       messages: this.convertToOpenAIMessages(input.messages),
       model: this.config.model,
       temperature:
@@ -209,8 +209,23 @@ class OpenAILLM extends BaseLLM<OpenAIConfig> {
         this.config.options?.frequencyPenalty,
       presence_penalty:
         input.options?.presencePenalty ?? this.config.options?.presencePenalty,
-      response_format: zodResponseFormat(input.schema, 'object'),
-    });
+    };
+    let response;
+    try {
+      response = await this.openAIClient.chat.completions.create({
+        ...createParams,
+        response_format: zodResponseFormat(input.schema, 'object'),
+      });
+    } catch (err: any) {
+      const msg = String(err?.message ?? err);
+      if (/response_format|json_schema|structured/i.test(msg)) {
+        response = await this.openAIClient.chat.completions.create(
+          createParams,
+        );
+      } else {
+        throw err;
+      }
+    }
 
     if (response.choices && response.choices.length > 0) {
       try {
