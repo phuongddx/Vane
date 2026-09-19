@@ -26,6 +26,8 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /home/vane
 
+COPY package.json yarn.lock ./
+
 COPY --from=builder /home/vane/public ./public
 COPY --from=builder /home/vane/.next/static ./public/_next/static
 COPY --from=builder /home/vane/.next/standalone ./
