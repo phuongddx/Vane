@@ -8,8 +8,11 @@ on:
   release:
     types: [published]
 
+# Upstream Docker Hub publish — skip on forks
+
 jobs:
   build-amd64:
+    if: github.repository_owner == 'ItzCrazyKns'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -78,6 +81,7 @@ jobs:
             --push .
 
   build-arm64:
+    if: github.repository_owner == 'ItzCrazyKns'
     runs-on: ubuntu-24.04-arm
     strategy:
       matrix:
@@ -146,6 +150,7 @@ jobs:
             --push .
 
   manifest:
+    if: github.repository_owner == 'ItzCrazyKns'
     needs: [build-amd64, build-arm64]
     runs-on: ubuntu-latest
     strategy:
