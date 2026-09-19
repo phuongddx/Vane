@@ -421,20 +421,50 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
         isReconnectingRef.current = true;
 
-        const res = await fetch(`/api/reconnect/${lastMsg.backendId}`, {
-          method: 'POST',
-        });
-
-        if (!res.body) throw new Error('No response body');
-
-        const reader = res.body?.getReader();
-        const decoder = new TextDecoder('utf-8');
-
-        let partialChunk = '';
-
-        const messageHandler = getMessageHandler(lastMsg);
+        const failReconnect = (message: string) => {
+          toast.error(message);
+          setLoading(false);
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.messageId === lastMsg.messageId
+                ? { ...msg, status: 'error' as const }
+                : msg,
+            ),
+          );
+        };
 
         try {
+          const res = await fetch(`/api/reconnect/${lastMsg.backendId}`, {
+            method: 'POST',
+          });
+
+          if (!res.ok) {
+            failReconnect(
+              `Unable to reconnect to the previous response (${res.status})`,
+            );
+            return;
+          }
+
+          if (!res.body) {
+            failReconnect('Unable to reconnect to the previous response');
+            return;
+          }
+
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder('utf-8');
+
+          let partialChunk = '';
+          let receivedTerminalEvent = false;
+
+          const baseMessageHandler = getMessageHandler(lastMsg);
+          const messageHandler = (data: any) => {
+            if (data.type === 'messageEnd' || data.type === 'error') {
+              receivedTerminalEvent = true;
+            }
+
+            baseMessageHandler(data);
+          };
+
           while (true) {
             const { value, done } = await reader.read();
             if (done) break;
@@ -453,6 +483,13 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
               console.warn('Incomplete JSON, waiting for next chunk...');
             }
           }
+
+          if (!receivedTerminalEvent) {
+            failReconnect('The previous response did not finish');
+          }
+        } catch (error) {
+          console.error('Failed to reconnect to search session:', error);
+          failReconnect('Unable to reconnect to the previous response');
         } finally {
           isReconnectingRef.current = false;
         }

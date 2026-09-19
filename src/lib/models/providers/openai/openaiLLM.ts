@@ -12,6 +12,7 @@ import {
 import { parse } from 'partial-json';
 import z from 'zod';
 import {
+  ChatCompletionChunk,
   ChatCompletionAssistantMessageParam,
   ChatCompletionMessageParam,
   ChatCompletionTool,
@@ -36,6 +37,8 @@ class OpenAILLM extends BaseLLM<OpenAIConfig> {
     this.openAIClient = new OpenAI({
       apiKey: this.config.apiKey,
       baseURL: this.config.baseURL || 'https://api.openai.com/v1',
+      timeout: 60_000,
+      maxRetries: 1,
     });
   }
 
@@ -162,6 +165,16 @@ class OpenAILLM extends BaseLLM<OpenAIConfig> {
       [];
 
     for await (const chunk of stream) {
+      const gatewayError = (
+        chunk as ChatCompletionChunk & {
+          error?: { message?: string };
+        }
+      ).error;
+
+      if (gatewayError) {
+        throw new Error(gatewayError.message || 'LLM gateway error');
+      }
+
       if (chunk.choices && chunk.choices.length > 0) {
         const toolCalls = chunk.choices[0].delta.tool_calls;
         yield {
