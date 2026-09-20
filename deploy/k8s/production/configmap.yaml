@@ -4,5 +4,5 @@ metadata:
   name: app-config
 data:
   NODE_ENV: production
-  DATA_DIR: /home/vane/data
+  DATA_DIR: /home/vane
   SEARXNG_API_URL: http://localhost:8080
