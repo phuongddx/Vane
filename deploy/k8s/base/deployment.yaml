@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vane
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: vane
+  template:
+    metadata:
+      labels:
+        app: vane
+    spec:
+      imagePullSecrets:
+        - name: ghcr-pull
+      containers:
+        - name: vane
+          image: ghcr.io/phuongddx/vane
+          ports:
+            - name: http
+              containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: app-config
+          volumeMounts:
+            - name: data
+              mountPath: /home/vane/data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: vane-data
