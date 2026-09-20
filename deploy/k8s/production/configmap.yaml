@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  NODE_ENV: production
+  DATA_DIR: /home/vane/data
+  SEARXNG_API_URL: http://localhost:8080

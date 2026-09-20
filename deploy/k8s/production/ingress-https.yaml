@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vane-https
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+spec:
+  tls:
+    - hosts:
+        - vane.dropitx.site
+      secretName: dropitx-origin-tls
+  rules:
+    - host: vane.dropitx.site
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: vane
+                port:
+                  number: 3000
